@@ -14,10 +14,11 @@ class Holder(object):
   def get(self):
     return self.value
 
-#Parser command of line
-class ValidatorCmd(object):
+#Commands Parser
+class Parser(object):
 
-  def __init__(self):
+  def __init__(self, in_s):
+    self.in_stream = in_s;
     self.regexp_C  = re.compile(r'^\s*C(\d+)\s*$')
     self.regexp_L  = re.compile(r'^\s*L([a-zA-KM-Z_]+\w*)\s*$')
     self.regexp_S  = re.compile(r'^\s*S([a-zA-KM-Z_]+\w*)\s*$')
@@ -28,10 +29,18 @@ class ValidatorCmd(object):
     self.regexp_JT = re.compile(r'^\s*JT(\d+)\s*$')
     self.regexp_JF = re.compile(r'^\s*JF(\d+)\s*$')
     self.regexp_E  = re.compile(r'^\s*E\s*$')
+    self.regexp_SKIP = re.compile(r'^\s+$')
     
 
-  def validate(self, str):
+  def _get_line(self):
+    return self.in_stream.readline()
+
+  def get_cmd(self):
     m = Holder()
+    str = self._get_line()
+    if not str:
+      raise StopIteration()
+
     if m.set(self.regexp_C.match(str)) :
       return [C, m.get().group(1)]
     elif m.set(self.regexp_L.match(str)) :
@@ -52,9 +61,17 @@ class ValidatorCmd(object):
       return [JF, m.get().group(1)]
     elif m.set(self.regexp_E.match(str)) :
       return [E]
+    elif m.set(self.regexp_SKIP.match(str)) :
+      return self.get_cmd()
     else:
-      sys.stdout.write("[error][ValidatorCmd]not recognize the command:\n"+str+"\n")
+      sys.stdout.write("[error][Parser]not recognize the command:\n"+str+"\n")
       sys.exit(1)
+
+  def __iter__(self):
+    return self
+
+  def next(self):
+    return self.get_cmd()
    
 
     
@@ -85,7 +102,7 @@ class StackMachine(object):
         elif op == S: var[arg] = stack.pop(); pc += 1
         elif op == R: stack.append( int( raw_input())); pc += 1
         elif op == W: print stack.pop(); pc += 1
-        elif op == B: stack.append(int( eval(str(stack.pop()) + arg + str(stack.pop()) )) ); pc += 1
+        elif op == B: stack.append(int( eval(str(stack.pop()) + arg + str(stack.pop()) )) ); pc += 1 #hack using eval
         elif op == J: pc = int(arg)-1
         elif op == JT:
           if not stack.pop():
@@ -98,7 +115,7 @@ class StackMachine(object):
           else:
             pc += 1
         elif op == E: break
-        
+
     except KeyError:
       print "[erorr][StackMachine][#instr:"+str(pc+1)+"]used uninitialized variable"
       sys.exit(1)
@@ -115,23 +132,24 @@ class StackMachine(object):
 
 
 
+if len(sys.argv) != 2:
+  print "no input file"
+  sys.exit(1)
 
-v = ValidatorCmd()
-program = []
 f = None
-try:
+try:  
   f = open(sys.argv[1],"r")
-  while True:
-    line = f.readline()
-    if not line:
-      break
-    program.append(v.validate(line))
+  parser = Parser(f)
+  program = []
+  for i in parser:
+    program.append(i)
 
   StackMachine().run(program)
 except IOError:
   print "[error][main]couldn't file:" + sys.argv[1]
 finally:
-  f.close()
+  if f:
+    f.close()
 
 
 
