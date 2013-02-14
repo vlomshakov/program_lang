@@ -14,6 +14,13 @@ class Holder(object):
   def get(self):
     return self.value
 
+
+class IllegalFormatCmdException(Exception):
+  def __iter__(self, msg):
+    self.msg = msg
+  def __str__(self):
+    return repr(self.msg)
+
 #Commands Parser
 class Parser(object):
 
@@ -64,8 +71,7 @@ class Parser(object):
     elif m.set(self.regexp_SKIP.match(str)) :
       return self.get_cmd()
     else:
-      sys.stdout.write("[error][Parser]not recognize the command:\n"+str+"\n")
-      sys.exit(1)
+      raise IllegalFormatCmdException("[error][Parser]not recognize the command:\n"+str+"\n");
 
   def __iter__(self):
     return self
@@ -74,9 +80,15 @@ class Parser(object):
     return self.get_cmd()
    
 
+class RunTimeErrorException(Exception):
+  def __iter__(self, msg):
+    self.msg = msg
+  def __str__(self):
+    return repr(self.msg)
     
 
 class StackMachine(object):
+
   def print_state(self, var, stack):
     print "State of variables:"
     for vname, value in var.iteritems():
@@ -89,7 +101,7 @@ class StackMachine(object):
   def run(self, program):
     var = {}
     stack = []
-    pc = 0 #count of instruction
+    pc = 0 #counter of instruction
 
     try:
       while True:
@@ -102,7 +114,8 @@ class StackMachine(object):
         elif op == S: var[arg] = stack.pop(); pc += 1
         elif op == R: stack.append( int( raw_input())); pc += 1
         elif op == W: print stack.pop(); pc += 1
-        elif op == B: stack.append(int( eval(str(stack.pop()) + arg + str(stack.pop()) )) ); pc += 1 #hack using eval
+        #hack - using eval
+        elif op == B: stack.append(int( eval(str(stack.pop()) + arg + str(stack.pop()) )) ); pc += 1 
         elif op == J: pc = int(arg)-1
         elif op == JT:
           if not stack.pop():
@@ -117,11 +130,9 @@ class StackMachine(object):
         elif op == E: break
 
     except KeyError:
-      print "[erorr][StackMachine][#instr:"+str(pc+1)+"]used uninitialized variable"
-      sys.exit(1)
+      raise RunTimeErrorException("[erorr][StackMachine][#instr:"+str(pc+1)+"]used uninitialized variable")
     except IndexError:
-      print "[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow"
-      sys.exit(1)
+      raise RunTimeErrorException("[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow")
 
     print "Execution finished"
     print "Ending state of machine:"
@@ -145,8 +156,12 @@ try:
     program.append(i)
 
   StackMachine().run(program)
-except IOError:
-  print "[error][main]couldn't file:" + sys.argv[1]
+except IOError as e:
+  print "I/O error({0}): {1}".format(e.errno, e.strerror)
+except IllegalFormatCmdException as e:
+  print e
+except RunTimeErrorException as e:
+  print e
 finally:
   if f:
     f.close()
