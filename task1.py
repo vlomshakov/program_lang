@@ -15,11 +15,11 @@ class Holder(object):
     return self.value
 
 
-class IllegalFormatCmdException(Exception):
-  def __iter__(self, msg):
+class SyntaxError_(Exception):
+  def __init__(self, msg):
     self.msg = msg
   def __str__(self):
-    return repr(self.msg)
+    return self.msg
 
 #Commands Parser
 class Parser(object):
@@ -71,7 +71,7 @@ class Parser(object):
     elif m.set(self.regexp_SKIP.match(str)) :
       return self.get_cmd()
     else:
-      raise IllegalFormatCmdException("[error][Parser]not recognize the command:\n"+str+"\n");
+      raise SyntaxError_('[error][Parser]not recognize the command:\n'+str);
 
   def __iter__(self):
     return self
@@ -80,11 +80,11 @@ class Parser(object):
     return self.get_cmd()
    
 
-class RunTimeErrorException(Exception):
-  def __iter__(self, msg):
+class RunTimeError(Exception):
+  def __init__(self, msg):
     self.msg = msg
   def __str__(self):
-    return repr(self.msg)
+    return self.msg
     
 
 class StackMachine(object):
@@ -130,9 +130,9 @@ class StackMachine(object):
         elif op == E: break
 
     except KeyError:
-      raise RunTimeErrorException("[erorr][StackMachine][#instr:"+str(pc+1)+"]used uninitialized variable")
+      raise RunTimeError("[erorr][StackMachine][#instr:"+str(pc+1)+"]used uninitialized variable")
     except IndexError:
-      raise RunTimeErrorException("[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow")
+      raise RunTimeError("[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow")
 
     print "Execution finished"
     print "Ending state of machine:"
@@ -158,9 +158,9 @@ try:
   StackMachine().run(program)
 except IOError as e:
   print "I/O error({0}): {1}".format(e.errno, e.strerror)
-except IllegalFormatCmdException as e:
+except SyntaxError_ as e:
   print e
-except RunTimeErrorException as e:
+except RunTimeError as e:
   print e
 finally:
   if f:
