@@ -79,7 +79,7 @@ class Parser(object):
     self.regexp_JF = re.compile(r'^\s*JF(\w+)\s*$')
     self.regexp_J  = re.compile(r'^\s*J(\w+)\s*$')
     self.regexp_E  = re.compile(r'^\s*E\s*$')
-    self.regexp_MARK = re.compile(r'^\s*(\w*):(.*$)')
+    self.regexp_MARK = re.compile(r'^\s*\$(\w*):(.*)$')
     self.regexp_SKIP = re.compile(r'^\s+$')
     
 
@@ -136,7 +136,7 @@ class Parser(object):
 
 class StackMachine(object):
   """
-  Stack machine implementation run mainloop.
+  Stack machine implementation run mainloop of interpreter.
   """
   def print_state(self, var, stack):
     print "State of variables:"
