@@ -69,15 +69,15 @@ class Parser(object):
   
   def __init__(self, in_s):
     self.in_stream = in_s;
-    self.regexp_C  = re.compile(r'^\s*C(\d+)\s*$')
-    self.regexp_L  = re.compile(r'^\s*L([a-zA-Z_]+\w*)\s*$')
-    self.regexp_S  = re.compile(r'^\s*S([a-zA-Z_]+\w*)\s*$')
+    self.regexp_C  = re.compile(r'^\s*C\s*(\d+)\s*$')
+    self.regexp_L  = re.compile(r'^\s*L\s*([a-zA-Z_]+\w*)\s*$')
+    self.regexp_S  = re.compile(r'^\s*S\s*([a-zA-Z_]+\w*)\s*$')
     self.regexp_R  = re.compile(r'^\s*R\s*$')
     self.regexp_W  = re.compile(r'^\s*W\s*$')
-    self.regexp_B  = re.compile(r'^\s*B([\+\-\*\/\%\>\<]|or|and|\!\=|\=\=|\>\=|\<\=)\s*$')
-    self.regexp_JT = re.compile(r'^\s*JT(\w+)\s*$')
-    self.regexp_JF = re.compile(r'^\s*JF(\w+)\s*$')
-    self.regexp_J  = re.compile(r'^\s*J(\w+)\s*$')
+    self.regexp_B  = re.compile(r'^\s*B\s*([\+\-\*\/\%\>\<]|or|and|\!\=|\=\=|\>\=|\<\=)\s*$')
+    self.regexp_JT = re.compile(r'^\s*JT\s*\$(\w+)\s*$')
+    self.regexp_JF = re.compile(r'^\s*JF\s*\$(\w+)\s*$')
+    self.regexp_J  = re.compile(r'^\s*J\s*\$(\w+)\s*$')
     self.regexp_E  = re.compile(r'^\s*E\s*$')
     self.regexp_MARK = re.compile(r'^\s*\$(\w*):(.*)$')
     self.regexp_SKIP = re.compile(r'^\s+$')
@@ -116,7 +116,7 @@ class Parser(object):
       return self.get_cmd(self._get_line())
     elif m.set(self.regexp_MARK.match(str)):
       Table().add_symbol(m.get().group(1), len(self.program))
-      print m.get().group(1), m.get().group(2)
+# print m.get().group(1), m.get().group(2)
       return self.get_cmd(m.get().group(2)+"\n")
     else:
       raise SyntaxError_("[error][Parser]not recognize the command:\n"+str);
@@ -192,9 +192,9 @@ class StackMachine(object):
     except IndexError:
       raise RunTimeError("[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow")
 
-    print "Execution finished."
-    print "Ending state of machine:"
-    self.print_state(var,stack)
+    # print "Execution finished."
+    # print "Ending state of machine:"
+    # self.print_state(var,stack)
     
 
 
@@ -210,8 +210,8 @@ try:
   f = open(sys.argv[1],"r")
   parser = Parser(f)
   program = parser.compile()
-  print program
-  print Table().mark_table
+# print program
+# print Table().mark_table
   StackMachine().run(program)
 except IOError as e:
   print "I/O error({0}): {1}".format(e.errno, e.strerror)
