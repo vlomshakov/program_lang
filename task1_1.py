@@ -6,6 +6,7 @@ import re
 
 
 #--------------------------------------------------------------------------
+# helper classes
 class Holder(object):
   def set(self, value):
     self.value = value
@@ -37,7 +38,7 @@ class Table(object):
     try:
       val = self.mark_table[name]
     except KeyError:
-      raise RunTimeError("[erorr][StackMachine] used undefined mark")
+      raise RunTimeError("[erorr][StackMachine] used undefined mark: $"+name)
     return val
 
 class SyntaxError_(Exception):
@@ -116,7 +117,6 @@ class Parser(object):
       return self.get_cmd(self._get_line())
     elif m.set(self.regexp_MARK.match(str)):
       Table().add_symbol(m.get().group(1), len(self.program))
-# print m.get().group(1), m.get().group(2)
       return self.get_cmd(m.get().group(2)+"\n")
     else:
       raise SyntaxError_("[error][Parser]not recognize the command:\n"+str);
@@ -171,18 +171,15 @@ class StackMachine(object):
           stack.append(int( eval(l + arg + r)) ); 
           pc += 1 
         elif op == J: 
-          if arg.isdigit(): pc = int(arg) - 1
-          else: pc = Table().get_value(arg)
+          pc = Table().get_value(arg)
         elif op == JT:
           if stack.pop():
-            if arg.isdigit(): pc = int(arg) - 1
-            else: pc = Table().get_value(arg)
+            pc = Table().get_value(arg)
           else:
             pc += 1 
         elif op == JF:
           if not stack.pop():
-            if arg.isdigit(): pc = int(arg) - 1
-            else: pc = Table().get_value(arg)
+            pc = Table().get_value(arg)
           else:
             pc += 1
         elif op == E: break
@@ -192,6 +189,7 @@ class StackMachine(object):
     except IndexError:
       raise RunTimeError("[erorr][StackMachine][#instr:"+str(pc+1)+"]illegal argument of jump instruction or stack underflow")
 
+#debug
     # print "Execution finished."
     # print "Ending state of machine:"
     # self.print_state(var,stack)
@@ -210,8 +208,6 @@ try:
   f = open(sys.argv[1],"r")
   parser = Parser(f)
   program = parser.compile()
-# print program
-# print Table().mark_table
   StackMachine().run(program)
 except IOError as e:
   print "I/O error({0}): {1}".format(e.errno, e.strerror)
